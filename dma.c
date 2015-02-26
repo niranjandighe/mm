@@ -1,11 +1,14 @@
 #include<linux/init.h>
 #include<linux/module.h>
 #include<linux/slab.h>
+#include<linux/mm.h>
+#include<linux/highmem.h>
 
 MODULE_LICENSE("GPL");
 
-static int *logical_address;
+static int *logical_address, *kmap_logical_address;
 static unsigned long physical_address;
+struct page *page;
 
 static __init int debugfs_init(void)
 {
@@ -20,12 +23,21 @@ static __init int debugfs_init(void)
 			physical_address = __pa(logical_address));
 	pr_warn("Logical address using macros again = %p\n",
 			__va(physical_address));
+
+	*logical_address = 0xcafebabe;
+	page = virt_to_page(logical_address);
+	kmap_logical_address = kmap(page);
+	pr_warn("Kmapped logical address = %p\n", kmap_logical_address);
+	pr_warn("Value at %p = %x\n", kmap_logical_address,
+						*kmap_logical_address);
+
 	return 0;
 }
 
 static __exit void debugfs_exit(void)
 {
 	kfree(logical_address);
+	kunmap(page);
 }
 
 module_init(debugfs_init);
