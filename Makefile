@@ -1,4 +1,4 @@
-obj-m := dma.o
+obj-m := dma.o mpdev.o
 KDIR ?= /usr/src/linux-headers-`uname -r`/
 all:
 	make -C $(KDIR) M=`pwd` modules
